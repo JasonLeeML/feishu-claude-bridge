@@ -1,0 +1,69 @@
+#!/usr/bin/env bash
+set -e
+
+PROJECT_DIR="$(pwd)"
+SCRIPT_PATH="${BASH_SOURCE[0]}"
+if command -v readlink >/dev/null 2>&1; then
+    SCRIPT_PATH="$(readlink -f "$SCRIPT_PATH")"
+fi
+BRIDGE_DIR="$(cd "$(dirname "$SCRIPT_PATH")/.." && pwd)"
+CONDA_ENV="feishu-claude"
+
+echo "🚀 启动 Feishu Claude Bridge"
+echo "📁 当前项目目录: $PROJECT_DIR"
+echo "🦞 Bridge 目录: $BRIDGE_DIR"
+
+cd "$BRIDGE_DIR"
+
+# 预检查：main.py 是否存在
+if [ ! -f "main.py" ]; then
+    echo "❌ 未找到 main.py，请确认当前在 Bridge 项目目录中"
+    exit 1
+fi
+
+# 加载 conda — 按优先级尝试常见安装路径
+_conda_found=false
+for _conda_base in \
+    "$HOME/miniconda3" \
+    "$HOME/anaconda3" \
+    "$HOME/miniforge3" \
+    "$HOME/mambaforge" \
+    "/opt/conda" \
+    "/usr/local/anaconda3" \
+    "/opt/homebrew/Caskroom/miniconda/base" \
+    ; do
+    if [ -f "$_conda_base/etc/profile.d/conda.sh" ]; then
+        source "$_conda_base/etc/profile.d/conda.sh"
+        _conda_found=true
+        break
+    fi
+done
+if ! $_conda_found && command -v conda >/dev/null 2>&1; then
+    # 兜底：conda 在 PATH 中（如通过 conda init 配置）
+    eval "$(conda shell.bash hook 2>/dev/null)" || true
+    _conda_found=true
+fi
+if ! $_conda_found; then
+    echo "❌ 找不到 conda.sh，请检查 conda 安装路径"
+    echo "已尝试搜索："
+    echo "  ~/miniconda3  ~/anaconda3  ~/miniforge3  ~/mambaforge"
+    echo "  /opt/conda  /usr/local/anaconda3"
+    echo "请设置 CONDA_BASE 环境变量指向你的 conda 安装目录后重试。"
+    exit 1
+fi
+
+conda activate "$CONDA_ENV"
+
+export FEISHU_CLAUDE_PROJECT_DIR="$PROJECT_DIR"
+
+PYTHON_BIN="${PYTHON_BIN:-python}"
+if ! command -v "$PYTHON_BIN" >/dev/null 2>&1; then
+    if command -v python3 >/dev/null 2>&1; then
+        PYTHON_BIN="python3"
+    else
+        echo "❌ 找不到 python 或 python3，请检查 $CONDA_ENV 环境"
+        exit 1
+    fi
+fi
+
+exec "$PYTHON_BIN" main.py

@@ -1,0 +1,34 @@
+feishu:
+  app_id: "FEISHU_APP_ID"
+  app_secret: "FEISHU_APP_SECRET"
+
+  max_message_length: 3500
+  send_retry_times: 3
+  send_retry_interval_seconds: 0.8
+
+claude:
+  fallback_project_dir: "~"
+  timeout_seconds: 300
+  max_turns: 5
+  output_format: "text"
+  verbose: false
+  max_concurrent_runs: 4
+  permission_mode: "default"
+
+mobile:
+  short_reply_default: true
+  short_reply_lines: 6
+  auto_status_cards: false
+  quick_actions_after_reply: false
+
+storage:
+  persist_sessions: false
+  persist_tasks: false
+  persist_pending_messages: false
+
+security:
+  allowed_user_ids: []
+
+paths:
+  allowed_roots:
+    - "~"
